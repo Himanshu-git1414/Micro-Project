@@ -43,8 +43,8 @@ percentile_threshold = df["rolling_vol_15"].quantile(0.95)
 
 df["vol_spike"] = df["rolling_vol_15"] > percentile_threshold
 
-print(percentile_threshold)
-print(df["vol_spike"].value_counts())
+# print(percentile_threshold)
+# print(df["vol_spike"].value_counts())
 
 # Daily Aggregation
 daily_summary = df.resample("D").agg({
@@ -57,4 +57,22 @@ daily_summary.columns = ["avg_vol", "max_vol", "spike_count"]
 
 # keeping only trading days
 daily_summary = daily_summary.dropna()
-print(daily_summary.head())
+# print(daily_summary.head())
+
+# Regime Classification
+low_thresh = daily_summary["spike_count"].quantile(0.2)
+high_thresh = daily_summary["spike_count"].quantile(0.8)
+
+def classify_regime(x):
+    if x >= high_thresh:
+        return "High Vol"
+    elif x <= low_thresh:
+        return "Low Vol"
+    else:
+        return "Normal"
+    
+daily_summary["regime"] = daily_summary["spike_count"].apply(classify_regime)
+
+print(daily_summary["regime"].value_counts())
+# print(df.head(20))
+# print(df.shape)
