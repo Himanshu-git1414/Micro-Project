@@ -36,4 +36,25 @@ df["atr_14"] = df["true_range"].rolling(window = 14).mean()
 
 df.drop(columns = ["prev_close", "tr1", "tr2", "tr3"], inplace = True)
 
-print(df[["rolling_vol_15", "atr_14"]].describe())
+df[["rolling_vol_15", "atr_14"]].describe()
+
+# spike Detection 
+percentile_threshold = df["rolling_vol_15"].quantile(0.95)
+
+df["vol_spike"] = df["rolling_vol_15"] > percentile_threshold
+
+print(percentile_threshold)
+print(df["vol_spike"].value_counts())
+
+# Daily Aggregation
+daily_summary = df.resample("D").agg({
+    "rolling_vol_15" : ["mean", "max"], 
+    "vol_spike" : "sum"
+})
+
+daily_summary.columns = ["avg_vol", "max_vol", "spike_count"]
+
+
+# keeping only trading days
+daily_summary = daily_summary.dropna()
+print(daily_summary.head())
